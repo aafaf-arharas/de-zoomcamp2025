@@ -35,6 +35,13 @@ select trips_unioned.tripid,
     dropoff_zone.zone as dropoff_zone,  
     trips_unioned.pickup_datetime, 
     trips_unioned.dropoff_datetime, 
+    
+    -- Extracted Date Dimensions
+    extract(year from trips_unioned.pickup_datetime) as year,
+    extract(quarter from trips_unioned.pickup_datetime) as quarter,
+    concat(extract(year from trips_unioned.pickup_datetime), '/Q', extract(quarter from trips_unioned.pickup_datetime)) as year_quarter,
+    extract(month from trips_unioned.pickup_datetime) as month,
+
     trips_unioned.store_and_fwd_flag, 
     trips_unioned.passenger_count, 
     trips_unioned.trip_distance, 

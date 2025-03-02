@@ -3,30 +3,30 @@ version: 2
 models:
   - name: dim_zones
     description: >
-      List of unique zones idefied by locationid. 
-      Includes the service zone they correspond to (Green or yellow).
+      List of unique zones identified by locationid. 
+      Includes the service zone they correspond to (Green or Yellow).
 
   - name: dm_monthly_zone_revenue
     description: >
-      Aggregated table of all taxi trips corresponding to both service zones (Green and yellow) per pickup zone, month and service.
+      Aggregated table of all taxi trips corresponding to both service zones (Green and Yellow) per pickup zone, month, and service.
       The table contains monthly sums of the fare elements used to calculate the monthly revenue. 
-      The table contains also monthly indicators like number of trips, and average trip distance. 
+      The table also contains monthly indicators like the number of trips and average trip distance.
     columns:
       - name: revenue_monthly_total_amount
-        description: Monthly sum of the the total_amount of the fare charged for the trip per pickup zone, month and service.
+        description: Monthly sum of the total_amount of the fare charged for the trip per pickup zone, month, and service.
         tests:
             - not_null:
                 severity: error
-      
+
   - name: fact_trips
     description: >
-      Taxi trips corresponding to both service zones (Green and yellow).
+      Taxi trips corresponding to both service zones (Green and Yellow).
       The table contains records where both pickup and dropoff locations are valid and known zones. 
-      Each record corresponds to a trip uniquely identified by tripid. 
+      Each record corresponds to a trip uniquely identified by tripid.
     columns:
       - name: tripid
         data_type: string
-        description: "unique identifier conformed by the combination of vendorid and pickup time"
+        description: "Unique identifier formed by the combination of vendorid and pickup time."
 
       - name: vendorid
         data_type: int64
@@ -127,3 +127,78 @@ models:
       - name: payment_type_description
         data_type: string
         description: ""
+
+  - name: fct_trips_quarterly_revenue
+    description: >
+      Aggregated table containing quarterly revenue for Green and Yellow taxis.
+      It includes the revenue for each quarter, as well as the year-over-year (YoY) revenue growth.
+    columns:
+      - name: year
+        data_type: int64
+        description: "Year extracted from pickup_datetime (e.g., 2019, 2020)."
+
+      - name: quarter
+        data_type: int64
+        description: "Quarter extracted from pickup_datetime (1, 2, 3, 4)."
+
+      - name: year_quarter
+        data_type: string
+        description: "Formatted year and quarter (e.g., 2019/Q1, 2020/Q2)."
+
+      - name: service_type
+        data_type: string
+        description: "Type of taxi service (Green or Yellow)."
+
+      - name: total_revenue
+        data_type: numeric
+        description: "Total revenue for the given year and quarter."
+
+      - name: prev_year_revenue
+        data_type: numeric
+        description: "Revenue for the same quarter in the previous year."
+
+      - name: yoy_revenue_growth
+        data_type: numeric
+        description: "Year-over-year (YoY) revenue growth percentage."
+        tests:
+          - not_null:
+              severity: warn
+  - name: fct_taxi_trips_monthly_fare_percentiles
+    description: >
+      Monthly percentile calculations (P90, P95, P97) for fare amounts in taxi trips, 
+      partitioned by service type (Green or Yellow). 
+      Filters out invalid trips (fare_amount > 0, trip_distance > 0) and only includes 
+      payments made via Cash or Credit Card.
+    columns:
+      - name: service_type
+        data_type: string
+        description: "Type of taxi service (Green or Yellow)."
+
+      - name: year
+        data_type: int64
+        description: "Year extracted from pickup_datetime."
+
+      - name: month
+        data_type: int64
+        description: "Month extracted from pickup_datetime."
+
+      - name: fare_amount_p90
+        data_type: numeric
+        description: "90th percentile of fare_amount for the given service type, year, and month."
+        tests:
+          - not_null:
+              severity: warn
+
+      - name: fare_amount_p95
+        data_type: numeric
+        description: "95th percentile of fare_amount for the given service type, year, and month."
+        tests:
+          - not_null:
+              severity: warn
+
+      - name: fare_amount_p97
+        data_type: numeric
+        description: "97th percentile of fare_amount for the given service type, year, and month."
+        tests:
+          - not_null:
+              severity: warn
